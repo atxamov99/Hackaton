@@ -1,95 +1,154 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
-import { toggleSidebar, toggleTheme } from '../store'
-import { logout } from '../store/slices/authSlice'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, LogOut } from 'lucide-react';
 
-const Navbar = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { isAuthenticated, user } = useSelector((state) => state.auth)
-  const { mode } = useSelector((state) => state.theme)
+export const Navbar = () => {
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   const handleLogout = () => {
-    dispatch(logout())
-    navigate('/')
-  }
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/');
+  };
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => dispatch(toggleSidebar())}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link to="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-              Hackaton
-            </Link>
-          </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-blue-600">
+            🐾 Pet Tashkent
+          </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">
-              Home
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/" className="text-gray-700 hover:text-blue-600 transition">
+              Главная
             </Link>
-            <Link to="/about" className="hover:text-blue-600 dark:hover:text-blue-400">
-              About
+            <Link to="/pets" className="text-gray-700 hover:text-blue-600 transition">
+              Животные
             </Link>
-            {isAuthenticated && (
-              <Link to="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Dashboard
+            <Link to="/shelters" className="text-gray-700 hover:text-blue-600 transition">
+              Приюты
+            </Link>
+            <Link to="/create-ad" className="text-gray-700 hover:text-blue-600 transition">
+              Подать объявление
+            </Link>
+
+            {user ? (
+              <div className="flex items-center gap-4">
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  >
+                    Админ панель
+                  </Link>
+                )}
+                <div className="flex items-center gap-2">
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <span className="text-gray-700">{user.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-red-600 transition"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+              >
+                Вход
               </Link>
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => dispatch(toggleTheme())}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {mode === 'dark' ? '🌞' : '🌙'}
-            </button>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden text-gray-700"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
 
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <Link to="/profile" className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
-                    {user?.name?.charAt(0) || 'U'}
-                  </div>
-                  <span className="hidden md:block">{user?.name}</span>
-                </Link>
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden pb-4 space-y-2">
+            <Link
+              to="/"
+              className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded"
+              onClick={() => setIsOpen(false)}
+            >
+              Главная
+            </Link>
+            <Link
+              to="/pets"
+              className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded"
+              onClick={() => setIsOpen(false)}
+            >
+              Животные
+            </Link>
+            <Link
+              to="/shelters"
+              className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded"
+              onClick={() => setIsOpen(false)}
+            >
+              Приюты
+            </Link>
+            <Link
+              to="/create-ad"
+              className="block px-4 py-2 text-gray-700 hover:bg-blue-50 rounded"
+              onClick={() => setIsOpen(false)}
+            >
+              Подать объявление
+            </Link>
+
+            {user ? (
+              <>
+                {user.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="block px-4 py-2 text-red-600 hover:bg-red-50 rounded"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Админ панель
+                  </Link>
+                )}
                 <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50 rounded"
                 >
-                  Logout
+                  Выход
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/auth/login"
-                  className="px-4 py-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/auth/register"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Register
-                </Link>
-              </div>
+              <Link
+                to="/login"
+                className="block px-4 py-2 bg-blue-500 text-white rounded text-center"
+                onClick={() => setIsOpen(false)}
+              >
+                Вход
+              </Link>
             )}
           </div>
-        </div>
+        )}
       </div>
     </nav>
-  )
-}
-
-export default Navbar
+  );
+};
